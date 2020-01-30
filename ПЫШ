@@ -7,25 +7,32 @@ class MyMainWindow(QMainWindow):
     def __init__(self):
         super(Notes, self).__init__()
 
-        layout = QHBoxLayout()
+        self.layout = QHBoxLayout()
         centralWidget = QWidget()
-        centralWidget.setLayout(layout)
+        centralWidget.setLayout(self.layout)
+        # centralWidget.setStyleSheet("background-color: white")
         self.setCentralWidget(centralWidget)
 
         self.textedit = QTextEdit()
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"     #директория, в которой по умолчанию хранятся заметки(впиши свою)
+        # self.textedit.setStyleSheet("border:None;")
+        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes" #директория, в которой по умолчанию хранятся заметки
 
-        if not os.listdir(self.path):   #проверка на пустоту директории
-            self.create_main_file()     #если в директории ничего нет, то создаем главный файл
+        if not os.listdir(self.path): #проверка на пустоту директории
+            self.create_main_file() #если в директории ничего нет, то создаем главный файл
 
         exist_file = open(self.path+r'\MainNote.txt', 'r')  # открываю тип файл для чтения
         self.textedit.insertPlainText(exist_file.read())
 
         self.textedit.textChanged.connect(self.save_text)
-        layout.addWidget(self.textedit)
+        self.layout.addWidget(self.textedit)
 
-        # plus_button = QPushButton('Tools', self)
-        # plus_button.setToolTip('This is Button for tools :)')
+        self.n = 0 #начальное количество кнопок(подзаметок)
+        self.list_btn = [] #список с кнопками(подзаметками)
+
+        plus_button = QPushButton('+', self)
+        plus_button.setToolTip('This is Button for tools :)')
+        plus_button.clicked.connect(self.create_new_btn)
+        self.layout.addWidget(plus_button)
 
     def save_text(self):
         text = self.textedit.toPlainText()
@@ -36,6 +43,12 @@ class MyMainWindow(QMainWindow):
         text = ''
         with open(self.path+r'\MainNote.txt', 'w+') as f:
             f.write(text)
+
+    def create_new_btn(self): #функция для создания кнопки(подзаметки)
+        self.n += 1
+        self.list_btn.append('btn' + str(self.n-1))
+        self.list_btn[self.n-1] = QPushButton('Note'+str(self.n))
+        self.layout.addWidget(self.list_btn[self.n-1])
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
