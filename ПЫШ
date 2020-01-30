@@ -2,10 +2,10 @@ import sys
 from PyQt5.QtWidgets import *
 
 
-class Notes(QMainWindow):
+class MyMainWindow(QMainWindow):
 
     def __init__(self):
-        super(Notes, self).__init__()
+        super(MyMainWindow, self).__init__()
 
         layout = QHBoxLayout()
         centralWidget = QWidget()
@@ -13,25 +13,23 @@ class Notes(QMainWindow):
         self.setCentralWidget(centralWidget)
         
         self.textedit = QTextEdit()
-        with open('MainNote.txt', 'w') as f1:
-            exist_file = open(r'MainNote.txt', 'r') # открываю тип файл для чтения
+        exist_file = open(r'MainNote.txt', 'r') # открываю тип файл для чтения
         self.textedit.insertPlainText(exist_file.read()) # вроде должно устанавливать
-                                                         # существующий текст
+                                                    # существующий текст
+                                                    
         self.textedit.textChanged.connect(self.save_text)
         layout.addWidget(self.textedit)
-
-        #plus_button = QPushButton('Tools', self)
-        #plus_button.setToolTip('This is Button for tools :)')
-        
 
     def save_text(self):
         text = self.textedit.toPlainText()
         with open('MainNote.txt', 'w') as f:
-            f.write(text)        
-
+            f.write(text)
+    '''def open_text(self):
+        last_text = self.textedit.toPlainText()
+    '''
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    form = Notes()
+    form = MyMainWindow()
     form.show()
     sys.exit(app.exec_())
