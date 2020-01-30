@@ -20,8 +20,8 @@ class Notes(QMainWindow):
         self.textedit.textChanged.connect(self.save_text)
         layout.addWidget(self.textedit)
 
-        plus_button = QPushButton('Tools', self)
-        plus_button.setToolTip('This is Button for tools :)')
+        #plus_button = QPushButton('Tools', self)
+        #plus_button.setToolTip('This is Button for tools :)')
         
 
     def save_text(self):
