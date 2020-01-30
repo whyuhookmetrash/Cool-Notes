@@ -1,11 +1,12 @@
 import sys
+import os
 from PyQt5.QtWidgets import *
 
 
 class MyMainWindow(QMainWindow):
 
     def __init__(self):
-        super(Notes, self).__init__()
+        super(MyMainWindow, self).__init__()
 
         self.layout = QHBoxLayout()
         centralWidget = QWidget()
