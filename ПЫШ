@@ -25,7 +25,7 @@ class Notes(QMainWindow):
             exist_file = open(self.path + r'\MainNote.json', 'r')  # открываю файл для чтения
             s = exist_file.read()
             line_wout_par = s[2:2] + s[2:len(s)-2]
-            self.u.setMaxLength(52)
+            self.u.setMaxLength(52) # дабы строка не была бесконечной
             self.u.setText(line_wout_par)
             self.u.textEdited.connect(self.save_text)
             self.layout.addWidget(self.u)
@@ -54,7 +54,8 @@ class Notes(QMainWindow):
         self.main_list.append('')
         self.line_list.append('lineEdit' + str(self.line_count))
         self.new_line = QLineEdit()
-        self.layout.addWidget(self.new_line)
+        self.layout.addWidget(self.new_line) # вроде работает
+        
     # эта штукенция в теории должна при достижении лимита на строку перекидывать на новую (не работает пока)
     def symbol_limit(self):
         text = self.u.text()
