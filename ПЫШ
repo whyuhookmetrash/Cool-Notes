@@ -1,58 +1,72 @@
-import sys
-import os
+import sys, os, json
 from PyQt5.QtWidgets import *
 
-
-class MyMainWindow(QMainWindow):
+class Notes(QMainWindow):
 
     def __init__(self):
-        super(MyMainWindow, self).__init__()
+        super(Notes, self).__init__()
 
-        self.layout = QHBoxLayout()
+        self.layout = QVBoxLayout()
         centralWidget = QWidget()
         centralWidget.setLayout(self.layout)
         # centralWidget.setStyleSheet("background-color: white")
         self.setCentralWidget(centralWidget)
 
-        self.textedit = QTextEdit()
-        # self.textedit.setStyleSheet("border:None;")
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes" #директория, в которой по умолчанию хранятся заметки
+        self.path = r"" #директория, в которой по умолчанию хранятся заметки
+
+        self.line_list = ['lineEdit1']
 
         if not os.listdir(self.path): #проверка на пустоту директории
             self.create_main_file() #если в директории ничего нет, то создаем главный файл
 
-        exist_file = open(self.path+r'\MainNote.txt', 'r')  # открываю тип файл для чтения
-        self.textedit.insertPlainText(exist_file.read())
 
-        self.textedit.textChanged.connect(self.save_text)
-        self.layout.addWidget(self.textedit)
+        for self.u in self.line_list:
+            self.u = QLineEdit()
+            exist_file = open(self.path + r'\MainNote.json', 'r')  # открываю файл для чтения
+            s = exist_file.read()
+            line_wout_par = s[2:2] + s[2:len(s)-2]
+            self.u.setMaxLength(52)
+            self.u.setText(line_wout_par)
+            self.u.textEdited.connect(self.save_text)
+            self.layout.addWidget(self.u)
+            self.u.returnPressed.connect(self.create_new_lineEdit)
 
-        self.n = 0 #начальное количество кнопок(подзаметок)
-        self.list_btn = [] #список с кнопками(подзаметками)
-
-        plus_button = QPushButton('+', self)
-        plus_button.setToolTip('This is Button for tools :)')
-        plus_button.clicked.connect(self.create_new_btn)
-        self.layout.addWidget(plus_button)
+        
+        self.line_count = 1
+        self.main_list = ['']
+        while len(self.main_list) < self.line_count:
+            self.main_list.append('')
+            
 
     def save_text(self):
-        text = self.textedit.toPlainText()
-        with open(self.path+r'\MainNote.txt', 'w') as f:
-            f.write(text)
+        text = self.u.text()
+        self.main_list[self.line_count - 1] = text
+        with open(self.path+r'\MainNote.json', 'w') as f:
+            json.dump(self.main_list, f)
 
     def create_main_file(self):
         text = ''
-        with open(self.path+r'\MainNote.txt', 'w+') as f:
+        with open(self.path+r'\MainNote.json', 'w+') as f:
             f.write(text)
 
-    def create_new_btn(self): #функция для создания кнопки(подзаметки)
-        self.n += 1
-        self.list_btn.append('btn' + str(self.n-1))
-        self.list_btn[self.n-1] = QPushButton('Note'+str(self.n))
-        self.layout.addWidget(self.list_btn[self.n-1])
-
+    def create_new_lineEdit(self):
+        self.line_count += 1
+        self.main_list.append('')
+        self.line_list.append('lineEdit' + str(self.line_count))
+        self.new_line = QLineEdit()
+        self.layout.addWidget(self.new_line)
+    # эта штукенция в теории должна при достижении лимита на строку перекидывать на новую (не работает пока)
+    def symbol_limit(self):
+        text = self.u.text()
+        symbol_num = 0
+        for sym in text:
+            symbol_num += 1
+        if symbol_num == 53:
+            self.create_new_lineEdit()
+            
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    form = MyMainWindow()
+    form = Notes()
     form.show()
     sys.exit(app.exec_())
