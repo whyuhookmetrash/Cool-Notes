@@ -12,7 +12,7 @@ class Notes(QMainWindow):
 
         self.setCentralWidget(centralWidget)
 
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"  # директория, в которой по умолчанию хранятся заметки
+        self.path = os.getcwd()
         if not os.listdir(self.path):  # проверка на пустоту директории
             self.create_main_file()  # если в директории ничего нет, то создаем главный файл
 
