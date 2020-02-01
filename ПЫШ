@@ -11,8 +11,9 @@ class Notes(QMainWindow):
         centralWidget.setLayout(self.layout)
         # centralWidget.setStyleSheet("background-color: white")
         self.setCentralWidget(centralWidget)
-
-        self.path = r"" #директория, в которой по умолчанию хранятся заметки
+        
+        # возвращает директорию, в которой сохране файл .py
+        self.path = os.qetcwd() 
 
         self.line_list = ['lineEdit1']
 
