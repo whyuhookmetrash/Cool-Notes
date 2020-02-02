@@ -12,52 +12,52 @@ class Notes(QMainWindow):
 
         self.setCentralWidget(centralWidget)
 
+        # self.path = os.getcwd()
         self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"  # директория, в которой по умолчанию хранятся заметки
+        
         if not os.listdir(self.path):  # проверка на пустоту директории
             self.create_main_file()  # если в директории ничего нет, то создаем главный файл
 
-        self.line_list = ['lineEdit1'] #список с названиями строк
         self.line_count = 1 #количество строк
-
-        json_data = json.load(open(self.path + r'\MainNote.json', 'r')) #считываем данные с json файла
+        json_data = json.load(open(self.path + r'\MainNote.json', 'r+')) #считываем данные с json файла
         jtopy = json.dumps(json_data)
-        self.main_list = json.loads(jtopy) #кладем их в список
+        self.main_dict = json.loads(jtopy) #кладем их в словарь
 
-        while len(self.main_list) > len(self.line_list):
+        while len(self.main_dict) > self.line_count: #выставляем количество
             self.line_count += 1
-            self.line_list.append('lineEdit' + str(self.line_count))
 
-        for i in range(len(self.line_list)):
-            self.start_line(line = self.line_list[i], i = i) #первую строку загоняем в функцию
+        for key in self.main_dict: #с помощью цикла выводим имеющиеся строки
+            self.start_line(line = self.main_dict[key], key = key)
 
-    def start_line(self, line, i): #функция, отвечающая за функционал строки
+    def start_line(self, line, key): #функция, отвечающая за функционал строки
         line = QLineEdit()
         json_data = json.load(open(self.path + r'\MainNote.json', 'r'))
         jtopy = json.dumps(json_data)
-        list_json = json.loads(jtopy)
+        dict_json = json.loads(jtopy)
         line.setMaxLength(52)  # дабы строка не была бесконечной
-        line.setText(list_json[i])
-        line.textEdited.connect(lambda: self.save_text(line)) #вот так нужно передавать аргументы в функции в PyQt
+        line.setText(dict_json[key])
+        line.textEdited.connect(lambda: self.save_text(line, key)) #вот так нужно передавать аргументы в функции в PyQt
                                                             #при использовании сигнала
         self.layout.addWidget(line)
         line.returnPressed.connect(self.create_new_lineEdit)
 
-    def save_text(self, line_text):
-        text = line_text.text()
-        self.main_list[self.line_count - 1] = text
+    def save_text(self, line, key):
+        text = line.text()
+        self.main_dict[key] = text
         with open(self.path + r'\MainNote.json', 'w') as f:
-            json.dump(self.main_list, f)
+            json.dump(self.main_dict, f)
 
     def create_main_file(self):
-        text = ''
+        text = '{"line1": ""}'
         with open(self.path + r'\MainNote.json', 'w+') as f:
             f.write(text)
 
     def create_new_lineEdit(self):
         self.line_count += 1
-        self.main_list.append('')
-        self.line_list.append('lineEdit' + str(self.line_count))
-        self.start_line(self.line_list[self.line_count-1], self.line_count-1) #после создания новой строки сразу кидаем ее в функцию start_line
+        self.main_dict['line'+str(self.line_count)] = ''
+        with open(self.path + r'\MainNote.json', 'w') as f: #это чтобы новая строка создавалась сразу и в json файле
+            json.dump(self.main_dict, f)
+        self.start_line(line = self.main_dict['line'+str(self.line_count)], key = 'line'+str(self.line_count)) #после создания новой строки сразу кидаем ее в функцию start_line
 
     # эта штукенция в теории должна при достижении лимита на строку перекидывать на новую (не работает пока)
     def symbol_limit(self):
