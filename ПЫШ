@@ -14,28 +14,21 @@ class Notes(QMainWindow):
 
         # self.path = os.getcwd()
         self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"  # директория, в которой по умолчанию хранятся заметки
-        
         if not os.listdir(self.path):  # проверка на пустоту директории
             self.create_main_file()  # если в директории ничего нет, то создаем главный файл
 
-        self.line_count = 1 #количество строк
         json_data = json.load(open(self.path + r'\MainNote.json', 'r+')) #считываем данные с json файла
         jtopy = json.dumps(json_data)
         self.main_dict = json.loads(jtopy) #кладем их в словарь
-
-        while len(self.main_dict) > self.line_count: #выставляем количество
-            self.line_count += 1
+        self.line_count = len(self.main_dict)  # количество строк
 
         for key in self.main_dict: #с помощью цикла выводим имеющиеся строки
             self.start_line(line = self.main_dict[key], key = key)
 
     def start_line(self, line, key): #функция, отвечающая за функционал строки
         line = QLineEdit()
-        json_data = json.load(open(self.path + r'\MainNote.json', 'r'))
-        jtopy = json.dumps(json_data)
-        dict_json = json.loads(jtopy)
         line.setMaxLength(52)  # дабы строка не была бесконечной
-        line.setText(dict_json[key])
+        line.setText(self.main_dict[key])
         line.textEdited.connect(lambda: self.save_text(line, key)) #вот так нужно передавать аргументы в функции в PyQt
                                                             #при использовании сигнала
         self.layout.addWidget(line)
