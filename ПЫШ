@@ -1,68 +1,52 @@
-import sys, os, json
+import sys, os
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-class Notes(QMainWindow):
 
+class SplitterExample(QWidget):
     def __init__(self):
-        super(Notes, self).__init__()
+        super(SplitterExample, self).__init__()
+        self.initUI()
 
-        self.layout = QVBoxLayout()
-        centralWidget = QWidget()
-        centralWidget.setLayout(self.layout)
-
-        self.setCentralWidget(centralWidget)
+    def initUI(self):
+        hbox = QHBoxLayout(self)
+        self.setWindowTitle('Test Window')
+        self.setGeometry(300, 300, 300, 200)
 
         # self.path = os.getcwd()
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"  # директория, в которой по умолчанию хранятся заметки
-        if not os.listdir(self.path):  # проверка на пустоту директории
-            self.create_main_file()  # если в директории ничего нет, то создаем главный файл
+        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
+        if not os.path.exists(self.path + r"\MainNote.json"):
+            self.create_main_file()
 
-        json_data = json.load(open(self.path + r'\MainNote.json', 'r+')) #считываем данные с json файла
-        jtopy = json.dumps(json_data)
-        self.main_dict = json.loads(jtopy) #кладем их в словарь
-        self.line_count = len(self.main_dict)  # количество строк
+        splitter1 = QSplitter(Qt.Horizontal)
+        textedit = QTextEdit()
+        textedit.setText(self.open_text())
+        splitter1.addWidget(textedit)
 
-        for key in self.main_dict: #с помощью цикла выводим имеющиеся строки
-            self.start_line(line = self.main_dict[key], key = key)
+        textedit.textChanged.connect(lambda: self.save_text(textedit))
 
-    def start_line(self, line, key): #функция, отвечающая за функционал строки
-        line = QLineEdit()
-        line.setMaxLength(52)  # дабы строка не была бесконечной
-        line.setText(self.main_dict[key])
-        line.textEdited.connect(lambda: self.save_text(line, key)) #вот так нужно передавать аргументы в функции в PyQt
-                                                            #при использовании сигнала
-        self.layout.addWidget(line)
-        line.returnPressed.connect(self.create_new_lineEdit)
+        splitter1.setSizes([100, 200])
+        splitter2 = QSplitter(Qt.Vertical)
+        splitter2.addWidget(splitter1)
+        hbox.addWidget(splitter2)
+        self.setLayout(hbox)
 
-    def save_text(self, line, key):
-        text = line.text()
-        self.main_dict[key] = text
+    def save_text(self, textedit):
         with open(self.path + r'\MainNote.json', 'w') as f:
-            json.dump(self.main_dict, f)
+            f.write(textedit.toPlainText())
 
     def create_main_file(self):
-        text = '{"line1": ""}'
+        text = ""
         with open(self.path + r'\MainNote.json', 'w+') as f:
             f.write(text)
 
-    def create_new_lineEdit(self):
-        self.line_count += 1
-        self.main_dict['line'+str(self.line_count)] = ''
-        with open(self.path + r'\MainNote.json', 'w') as f: #это чтобы новая строка создавалась сразу и в json файле
-            json.dump(self.main_dict, f)
-        self.start_line(line = self.main_dict['line'+str(self.line_count)], key = 'line'+str(self.line_count)) #после создания новой строки сразу кидаем ее в функцию start_line
+    def open_text(self):
+        with open(self.path + r'\MainNote.json', 'r') as f:
+            json_data = f.read()
+        return json_data
 
-    # эта штукенция в теории должна при достижении лимита на строку перекидывать на новую (не работает пока)
-    def symbol_limit(self):
-        text = self.u.text()
-        symbol_num = 0
-        for sym in text:
-            symbol_num += 1
-        if symbol_num == 53:
-            self.create_new_lineEdit()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
-    form = Notes()
-    form.show()
+    demo = SplitterExample()
+    demo.show()
     sys.exit(app.exec_())
