@@ -18,11 +18,6 @@ class SplitterExample(QWidget):
         self.setWindowTitle('Test Window')
         self.setGeometry(300, 300, 300, 200)
 
-        # # self.path = os.getcwd()
-        # self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
-        # if not os.path.exists(self.path + r"\MainNote.json"):
-        #     self.create_main_file()
-
         splitter1 = QSplitter(Qt.Horizontal)
         textedit = QTextEdit()
         textedit.setText(self.open_text())
