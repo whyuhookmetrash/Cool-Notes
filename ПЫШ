@@ -8,8 +8,7 @@ class Notes(QWidget):
     def __init__(self):
         super(Notes, self).__init__()
 
-        # self.path = os.getcwd()
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
+        self.path = os.getcwd()
         if not os.path.exists(self.path + r"\MainNote.json"):
             self.create_main_file()
 
