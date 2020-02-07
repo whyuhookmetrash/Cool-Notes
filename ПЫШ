@@ -1,60 +1,118 @@
 import sys, os
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 
 
 class Notes(QWidget):
     def __init__(self):
         super(Notes, self).__init__()
+
         # self.path = os.getcwd()
         self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
         if not os.path.exists(self.path + r"\MainNote.json"):
             self.create_main_file()
 
+        self.notes_list = [] #СПИСОК С ЗАМЕТКАМИ
+        i = 1
+        while os.path.exists(self.path + r"\Note" + str(i) + ".json"):
+            self.notes_list.append('Note'+str(i))
+            i += 1
+
+        self.notes_count = len(self.notes_list) #КОЛИЧЕСТВО ЗАМЕТОК
+
         self.initUI()
 
     def initUI(self):
-        hbox = QHBoxLayout(self)
+        self.hbox = QHBoxLayout(self)
         self.setWindowTitle('Test Window')
-        self.setGeometry(300, 300, 300, 200)
+        self.setGeometry(300, 300, 400, 200)
 
         splitter1 = QSplitter(Qt.Horizontal)
-        textedit = QTextEdit()
-        textedit.setText(self.open_text())
-        splitter1.addWidget(textedit)
+        self.textedit = QTextEdit()
+        splitter1.addWidget(self.textedit)
 
-        textedit.textChanged.connect(lambda: self.save_text(textedit))
+        doc = QTextDocument()
+        doc.setPlainText(self.open_text( r"\MainNote.json"))
+        doc.contentsChanged.connect(lambda: self.save_text(r"\MainNote.json"))
+        self.textedit.setDocument(doc)
 
         splitter1.setSizes([100, 200])
         splitter2 = QSplitter(Qt.Vertical)
         splitter2.addWidget(splitter1)
-        hbox.addWidget(splitter2)
-        self.setLayout(hbox)
+        self.hbox.addWidget(splitter2)
+        self.setLayout(self.hbox)
 
-    # сохранение
-    def save_text(self, textedit):
-        with open(self.path + r'\MainNote.json', 'w') as f:
-            f.write(textedit.toPlainText())
-    
-    # создание нового файла при его отсутствии 
-    def create_main_file(self):
+        plusButton = QPushButton('Plus')
+        self.hbox.addWidget(plusButton)
+        plusButton.clicked.connect(lambda: self.new_note())
+        plusButton.setShortcut("Ctrl+N")
+
+        screpButton = QPushButton('Screpka')
+        self.hbox.addWidget(screpButton)
+        self.cycle_all_notes()
+
+    def cycle_all_notes(self): #ПРОХОДИТСЯ ЦИКЛОМ ПО ВСЕМ ЗАМЕТКАМ
+        for i in self.notes_list:
+            self.show_note_btn(i)
+
+    def show_note_btn(self, note): #ОТОБРАЖАЕТ И АКТИВИРУЕТ КНОПКУ
+        note_btn = QPushButton(str(note))
+        self.hbox.addWidget(note_btn)
+        note_btn.clicked.connect(lambda: self.show_note_doc(note))
+
+    def show_note_doc(self, note): #СОЗДАЕТ ТЕСТОВОЕ ПОЛЕ QTEXTDOCUMENT И АКТИВИРУЕТ СОХРАНЕНИЕ
+        note_doc = QTextDocument()
+        note_doc.setPlainText(self.open_text("\\" + note + ".json"))
+        self.textedit.setDocument(note_doc)
+        note_doc.contentsChanged.connect(lambda: self.save_text('//' + note + '.json'))
+
+    def save_text(self, file): #УНИВЕРСАЛЬНАЯ СОХРАНЯЛКА JSON ФАЙЛОВ
+        text = self.textedit.toPlainText()
+        with open(self.path + file, 'w') as f:
+            f.write(text)
+
+    def create_main_file(self): #СОЗДАНИЕ ГЛАВНОЙ ЗАМЕТКИ
         text = ""
         with open(self.path + r'\MainNote.json', 'w+') as f:
             f.write(text)
-    
-    # открытие текста при входе в приложение
-    def open_text(self):
-        with open(self.path + r'\MainNote.json', 'r') as f:
+
+    def open_text(self, file): #УНИВЕРСАЛЬНАЯ ОТКРЫВАЛКА JSON ФАЙЛОВ
+        with open(self.path + file, 'r') as f:
             json_data = f.read()
         return json_data
-    
-    # создание подзаметки. Задача :разместить ее в текстовом поле на верхнем разделителе
-    def new_note(self):
-        new_prenote = QPushButton('Подзаметка')
-        self.hbox.insertWidget(1, new_prenote)
+
+    def new_note(self): #СОЗДАНИЕ НОВОЙ КНОПКИ ЗАМЕТКИ
+        self.notes_count += 1
+        self.notes_list.append('Note' + str(self.notes_count))
+        new_note_btn = QPushButton(self.notes_list[self.notes_count-1])
+        text = ""
+        with open(self.path + r'\Note'+ str(self.notes_count) + '.json', 'w+') as f:
+            f.write(text)
+        self.hbox.addWidget(new_note_btn)
+        new_note_btn.clicked.connect(lambda: self.show_note_doc(self.notes_list[self.notes_count-1]))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
+    # DESIGN
+    app.setStyle("Fusion")
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(53, 53, 53))
+    palette.setColor(QPalette.WindowText, Qt.white)
+    palette.setColor(QPalette.Base, QColor(25, 25, 25))
+    palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+    palette.setColor(QPalette.ToolTipBase, Qt.white)
+    palette.setColor(QPalette.ToolTipText, Qt.white)
+    palette.setColor(QPalette.Text, Qt.white)
+    palette.setColor(QPalette.Button, QColor(53, 53, 53))
+    palette.setColor(QPalette.ButtonText, Qt.white)
+    palette.setColor(QPalette.BrightText, Qt.red)
+    palette.setColor(QPalette.Link, QColor(42, 130, 218))
+    palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+    palette.setColor(QPalette.HighlightedText, Qt.black)
+    app.setPalette(palette)
+
     demo = Notes()
     demo.show()
     sys.exit(app.exec_())
