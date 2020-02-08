@@ -23,41 +23,48 @@ class Notes(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.hbox = QHBoxLayout(self)
-        self.setWindowTitle('Test Window')
-        self.setGeometry(300, 300, 400, 200)
+        
+        # Размеры
+        self.setWindowTitle('Note')
+        self.setGeometry(300, 300, 600, 400)
 
-        splitter1 = QSplitter(Qt.Horizontal)
+        # Основная сетка
+        self.mainbox = QGridLayout(self)
+        self.setLayout(self.mainbox)
         self.textedit = QTextEdit()
-        splitter1.addWidget(self.textedit)
-
+        self.mainbox.addWidget(self.textedit)
+        # Начальный документ
         doc = QTextDocument()
         doc.setPlainText(self.open_text( r"\MainNote.json"))
         doc.contentsChanged.connect(lambda: self.save_text(r"\MainNote.json"))
         self.textedit.setDocument(doc)
 
-        splitter1.setSizes([100, 200])
-        splitter2 = QSplitter(Qt.Vertical)
-        splitter2.addWidget(splitter1)
-        self.hbox.addWidget(splitter2)
-        self.setLayout(self.hbox)
+        #-----------------
+        # Кнопки
 
+        # Plus
         plusButton = QPushButton('Plus')
-        self.hbox.addWidget(plusButton)
+        self.mainbox.addWidget(plusButton)
         plusButton.clicked.connect(lambda: self.new_note())
         plusButton.setShortcut("Ctrl+N")
 
+        # screp
         screpButton = QPushButton('Screpka')
-        self.hbox.addWidget(screpButton)
+        self.mainbox.addWidget(screpButton)
         self.cycle_all_notes()
+
+        # Arrow
+        arrowButton = QPushButton()
+        self.mainbox.addWidget(arrowButton)
+        arrowButton.clicked.connect(lambda: self.show_main_note())
 
     def cycle_all_notes(self): #ПРОХОДИТСЯ ЦИКЛОМ ПО ВСЕМ ЗАМЕТКАМ
         for i in self.notes_list:
             self.show_note_btn(i)
 
     def show_note_btn(self, note): #ОТОБРАЖАЕТ И АКТИВИРУЕТ КНОПКУ
-        note_btn = QPushButton(str(note))
-        self.hbox.addWidget(note_btn)
+        note_btn = QPushButton(str(note), parent = self.textedit)
+        self.mainbox.addWidget(note_btn)
         note_btn.clicked.connect(lambda: self.show_note_doc(note))
 
     def show_note_doc(self, note): #СОЗДАЕТ ТЕСТОВОЕ ПОЛЕ QTEXTDOCUMENT И АКТИВИРУЕТ СОХРАНЕНИЕ
@@ -65,6 +72,12 @@ class Notes(QWidget):
         note_doc.setPlainText(self.open_text("\\" + note + ".json"))
         self.textedit.setDocument(note_doc)
         note_doc.contentsChanged.connect(lambda: self.save_text('//' + note + '.json'))
+
+    def show_main_note(self): # ВОЗВРАЩАЕТ К ГЛАВНОЙ ЗАМТКЕ
+        main_txtEdit = QTextDocument()
+        main_txtEdit.setPlainText(self.open_text(r'\MainNote.json'))
+        self.textedit.setDocument(main_txtEdit)
+        main_txtEdit.contentsChanged.connect(lambda: self.save_text(r'\MainNote.json'))
 
     def save_text(self, file): #УНИВЕРСАЛЬНАЯ СОХРАНЯЛКА JSON ФАЙЛОВ
         text = self.textedit.toPlainText()
@@ -88,8 +101,12 @@ class Notes(QWidget):
         text = ""
         with open(self.path + r'\Note'+ str(self.notes_count) + '.json', 'w+') as f:
             f.write(text)
-        self.hbox.addWidget(new_note_btn)
+        self.mainbox.addWidget(new_note_btn)
         new_note_btn.clicked.connect(lambda: self.show_note_doc(self.notes_list[self.notes_count-1]))
+
+    #def RightMousePress_for_note(self):
+
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
