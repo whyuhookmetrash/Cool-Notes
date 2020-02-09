@@ -71,8 +71,7 @@ class Notes(QWidget):
 
         # Запускаем цикл
         self.cycle_all_notes()
-        
-        # Запускаем функцию показа добавленных картинок
+
         self.show_note_img()
 
 
@@ -112,6 +111,7 @@ class Notes(QWidget):
         self.textedit.setDocument(main_txtEdit)
         main_txtEdit.contentsChanged.connect(lambda: self.save_text(r'\MainNote.json'))
 
+    @pyqtSlot(str)
     def save_text(self, file):  # УНИВЕРСАЛЬНАЯ СОХРАНЯЛКА JSON ФАЙЛОВ
         text = self.textedit.toPlainText()
         self.main_dict["text"] = text
@@ -136,37 +136,14 @@ class Notes(QWidget):
     def new_note(self):  # СОЗДАНИЕ НОВОЙ КНОПКИ ЗАМЕТКИ
         self.notes_count += 1
         self.notes_list.append('Note' + str(self.notes_count))
-        self.new_note_btn = QPushButton(self.notes_list[self.notes_count - 1])
+        new_note_btn = QPushButton(self.notes_list[self.notes_count - 1])
         text = '{"text": "", "images": ""}'
         self.notes_dict_list.append(eval(text))
         with open(self.path + r'\Note' + str(self.notes_count) + '.json', 'w+') as f:
             f.write(text)
-        self.mainbox.addWidget(self.new_note_btn)
-        self.new_note_btn.clicked.connect(lambda: self.show_note_doc(
-            self.notes_list[self.notes_count - 1]))
-        self.new_note_btn.clicked.connect(lambda: self.func_active_btn_note(
-            self.notes_list[self.notes_count - 1]))
-
-        # Меню
-        self.new_note_btn.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.new_note_btn.customContextMenuRequested.connect(self.on_context_menu)
-
-        self.popMenu = QMenu(self)
-
-        # действия контекстного меню
-        openAct = QAction('Open', self)
-        #openAct.triggered.connect(self.open_note)
-        removeAct = QAction('Delete', self)
-        removeAct.triggered.connect(lambda:self.note_remove(self.new_note_btn))
-        
-        # добавляем на меню
-        self.popMenu.addAction(openAct)
-        self.popMenu.addAction(removeAct)
-        self.popMenu.addSeparator() # вообще не знаю че это даже не смотри
- 
-    def on_context_menu(self, point):
-        # Показываем меню и выбираем ему место
-        self.popMenu.exec_(self.new_note_btn.mapToGlobal(point))
+        self.mainbox.addWidget(new_note_btn)
+        new_note_btn.clicked.connect(lambda: self.show_note_doc(self.notes_list[self.notes_count - 1]))
+        new_note_btn.clicked.connect(lambda: self.func_active_btn_note(self.notes_list[self.notes_count - 1]))
 
     def add_img(self, file ): # ДОБАВЛЯЕТ КАРТИНКУ В АКТИВНУЮ ЗАМЕТКУ
         path, filter = QFileDialog.getOpenFileName()
@@ -184,11 +161,6 @@ class Notes(QWidget):
         pixmap_resized = pixmap.scaled(100, 100, Qt.KeepAspectRatio)
         label.setPixmap(pixmap_resized)
         self.mainbox.addWidget(label)
-    def note_remove(self, somenote): # УДАЛЯЕТ ПОДЗАМЕТКУ
-        self.mainbox.removeWidget(somenote)
-        #self.notes_list = self.notes_list[] здеся нужно сделать удаление из списка кнопки
-        #os.remove(self.path + ) а здесь нужно получить название файла заметки
-                                #которую хотим удалить 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
