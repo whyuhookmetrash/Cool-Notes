@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
-
+# ----
 class Notes(QWidget):
     def __init__(self):
         super(Notes, self).__init__()
