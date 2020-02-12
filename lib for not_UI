@@ -1,0 +1,30 @@
+# Поиск заметок в тексте на регулярках
+def find_link_in(string):
+    """
+        Ищет все ссылки в тексте и возвращает их колличество и позицию\и (список)
+        Возвращает кортеж
+    """
+    local_string = string
+    
+    import re
+    
+    try:
+        mark = re.search("(?P<url>https?://[^\s]+)", local_string).group("url")
+    except AttributeError:
+        mark = 0
+            
+    links_count = 0
+    links_position_list = []
+    
+    while mark != 0:
+
+        links_count += 1
+        links_position_list.append(local_string.find(mark) + len(mark))
+        local_string = local_string[links_position_list[links_count - 1]:]
+        
+        try:
+            mark = re.search("(?P<url>https?://[^\s]+)", local_string).group("url")
+        except AttributeError:
+            mark = 0
+
+    return links_count, links_position_list
