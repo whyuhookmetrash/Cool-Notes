@@ -4,12 +4,29 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
 
+class MyPushButton(QPushButton):
+    left_click = pyqtSignal()
+    right_click = pyqtSignal()
+
+    def __init__(self, string):
+        super().__init__(string)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.left_click.emit()
+            print('left click')
+        elif event.button() == Qt.RightButton:
+            self.right_click.emit()
+            print('right click')
+
+        QPushButton.mousePressEvent(self, event)
+
 class Notes(QWidget):
     def __init__(self):
         super(Notes, self).__init__()
 
-        # self.path = os.getcwd()
-        self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
+        self.path = os.getcwd()
+        # self.path = r"D:\PROGRAMMING\Notes_App\directory_for_notes"
         if not os.path.exists(self.path + r"\MainNote.json"):
             self.create_main_file()
 
@@ -40,6 +57,10 @@ class Notes(QWidget):
         # Основная сетка
         self.mainbox = QGridLayout(self)
         self.setLayout(self.mainbox)
+
+        self.note_name = QLabel("MainNote")
+        self.mainbox.addWidget(self.note_name)
+
         self.textedit = QTextEdit()
         self.mainbox.addWidget(self.textedit)
 
@@ -56,21 +77,38 @@ class Notes(QWidget):
         self.active_btn_note = 'MainNote'
 
         # Arrow
-        arrowButton = QPushButton('Main Note')
+        arrowButton = MyPushButton('Main Note')
         self.mainbox.addWidget(arrowButton)
-        arrowButton.clicked.connect(lambda: self.show_main_note())
-        arrowButton.clicked.connect(lambda: self.func_active_btn_note('MainNote'))
+        arrowButton.left_click.connect(lambda: self.show_main_note())
+        arrowButton.left_click.connect(lambda: self.func_active_btn_note('MainNote'))
 
         # Plus
-        plusButton = QPushButton('Plus')
+        plusButton = MyPushButton('Plus')
         self.mainbox.addWidget(plusButton)
-        plusButton.clicked.connect(lambda: self.new_note())
+        plusButton.left_click.connect(lambda: self.new_note())
         plusButton.setShortcut("Ctrl+N")
 
+        # Меню для кнопки-скрепки
+        menu_button = QMenu()
+
+        addImage = QAction('Image', self)
+        addTable = QAction('Table', self)
+        addDocument = QAction('Document', self)
+        addAudio = QAction('Audio', self)
+
+        menu_button.addAction(addImage)
+        menu_button.addAction(addDocument)
+        menu_button.addAction(addTable)
+        menu_button.addAction(addAudio)
+        menu_button.addSeparator() 
+
+        menu_button.customContextMenuRequested.connect(lambda: self.show_context_menu())
+
         # Screpka
-        screpButton = QPushButton('Screpka')
+        screpButton = MyPushButton('Screpka')
+        screpButton.setMenu(menu_button)
         self.mainbox.addWidget(screpButton)
-        screpButton.clicked.connect(lambda: self.add_img(self.active_btn_note))
+        # screpButton.left_click.connect(lambda: self.add_img(self.active_btn_note))
 
 
         print('self.notes_dict_list:', self.notes_dict_list)
@@ -90,12 +128,17 @@ class Notes(QWidget):
             self.show_note_btn("Note" + str(note["number"]))
 
     def show_note_btn(self, note):  # ОТОБРАЖАЕТ И АКТИВИРУЕТ КНОПКУ
-        note_btn = QPushButton(str(note))
+        note_btn = MyPushButton(self.notes_dict_list[int(note[4:])-1]["name"])
         self.mainbox.addWidget(note_btn)
-        note_btn.clicked.connect(lambda: self.show_note_doc(note))
-        note_btn.clicked.connect(lambda: self.context_menu(note_btn, note))
-        note_btn.clicked.connect(lambda: self.func_active_btn_note(note))
-        note_btn.clicked.connect(self.show_note_img)
+        note_btn.left_click.connect(lambda: self.show_note_doc(note))
+        note_btn.right_click.connect(lambda: self.context_menu(note_btn, note))
+        note_btn.left_click.connect(lambda: self.func_active_btn_note(note))
+        note_btn.left_click.connect(lambda: self.note_name_func(note))
+        # note_btn.clicked.connect(self.show_note_img)
+
+    def note_name_func(self, note):
+        name = self.notes_dict_list[int(note[4:])-1]["name"]
+        self.note_name.setText(name)
 
     def show_note_doc(self, note):  # СОЗДАЕТ ТЕСТОВОЕ ПОЛЕ QTEXTDOCUMENT И АКТИВИРУЕТ СОХРАНЕНИЕ
         note_doc = QTextDocument()
@@ -103,7 +146,7 @@ class Notes(QWidget):
         self.textedit.setDocument(note_doc)
         note_doc.contentsChanged.connect(lambda: self.save_text(note))
 
-    def show_note_img(self): #ПОКАЗЫВАЕТ КАРТИНКИ
+    def show_note_img(self): #ПОКАЗЫВАЕТ ЗАГРУЖЕННЫЕ РАНЕЕ КАРТИНКИ
         note = self.active_btn_note
         label = QLabel()
         pixmap = QPixmap(self.open_img("\\" + note + ".json"))
@@ -120,6 +163,7 @@ class Notes(QWidget):
         main_txtEdit = QTextDocument()
         main_txtEdit.setPlainText(self.open_text(r'\MainNote.json'))
         self.textedit.setDocument(main_txtEdit)
+        self.note_name.setText("MainNote")
         main_txtEdit.contentsChanged.connect(lambda: self.save_text(r'\MainNote.json'))
 
     def save_text(self, file):  # УНИВЕРСАЛЬНАЯ СОХРАНЯЛКА JSON ФАЙЛОВ
@@ -145,17 +189,23 @@ class Notes(QWidget):
 
     def new_note(self):  # СОЗДАНИЕ НОВОЙ КНОПКИ ЗАМЕТКИ
         self.notes_count += 1
-        new_note_btn = QPushButton('Note'+str(self.notes_count))
 
-        new_note_dict = {"name": "", "text": "", "images": "", "number": self.notes_count}
+        text, ok = QInputDialog.getText(self, "Naming", "Enter name")
+        new_note_name = None
+        if ok:
+            new_note_name = str(text)
+
+        new_note_btn = MyPushButton(new_note_name)
+        new_note_dict = {"name": new_note_name, "text": "", "images": "", "number": self.notes_count}
         self.notes_dict_list.append(new_note_dict)
 
-        new_note_btn.clicked.connect(lambda: self.show_note_doc('Note' + str(new_note_dict["number"])))
-        new_note_btn.clicked.connect(lambda: self.context_menu(new_note_btn, 'Note' + str(new_note_dict["number"])))
-        new_note_btn.clicked.connect(lambda: self.func_active_btn_note('Note' + str(new_note_dict["number"])))
-        new_note_btn.clicked.connect(self.show_note_img)
-
-        text = '{{"name": "", "text": "", "images": "", "number": {}}}'.format(self.notes_count)
+        new_note_btn.left_click.connect(lambda: self.show_note_doc('Note' + str(new_note_dict["number"])))
+        new_note_btn.right_click.connect(lambda: self.context_menu(new_note_btn, 'Note' + str(new_note_dict["number"])))
+        new_note_btn.left_click.connect(lambda: self.func_active_btn_note('Note' + str(new_note_dict["number"])))
+        new_note_btn.left_click.connect(lambda: self.note_name_func('Note' + str(new_note_dict["number"])))
+        # new_note_btn.clicked.connect(self.show_note_img)
+        self.err_signal()
+        text = '{{"name": "{}", "text": "", "images": "", "number": {}}}'.format(new_note_name, self.notes_count)
         with open(self.path + r'\Note' + str(self.notes_count) + '.json', 'w+') as f:
             f.write(text)
         self.mainbox.addWidget(new_note_btn)
