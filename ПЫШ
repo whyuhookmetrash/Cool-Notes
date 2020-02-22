@@ -213,7 +213,7 @@ class Notes(QWidget):
         new_note_btn.left_click.connect(lambda: self.func_active_note('Note' + str(new_note_dict["number"])))
         new_note_btn.left_click.connect(lambda: self.note_name_func('Note' + str(new_note_dict["number"])))
         # new_note_btn.clicked.connect(self.show_note_img)
-        self.err_signal()
+
         text = '{{"name": "{}", "text": "", "images": "", "number": {}, "date": "{}"}}'.format(new_note_name, self.notes_count, self.note_date_func())
         with open(self.path + r'\Note' + str(self.notes_count) + '.json', 'w+') as f:
             f.write(text)
