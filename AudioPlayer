@@ -1,0 +1,76 @@
+import sys
+from PyQt5 import QtMultimedia, QtWidgets, QtCore
+
+from PyQt5.QtWidgets import *
+
+
+class MyWindow(QtWidgets.QWidget):
+    def __init__(self, parent = None):
+        QtWidgets.QWidget.__init__(self, parent, flags =
+                                   QtCore.Qt.Window | QtCore.Qt.MSWindowsFixedSizeDialogHint)
+        # создание плеера
+        self.mplPlayer = QtMultimedia.QMediaPlayer()
+        self.mplPlayer.setVolume(50)
+        self.mplPlayer.mediaStatusChanged.connect(self.initPlayer)
+        self.mplPlayer.stateChanged.connect(self.setPlayerState)
+        vbox = QtWidgets.QHBoxLayout()
+        # кнопка открытия
+        btnOpen = QtWidgets.QPushButton('Открыть')
+        btnOpen.clicked.connect(self.openFile)
+        vbox.addWidget(btnOpen)
+
+        # кнопка Play
+        self.btnPlay = QtWidgets.QPushButton('Play')
+        self.btnPlay.clicked.connect(self.mplPlayer.play)
+        self.btnPlay.setEnabled(False)
+        vbox.addWidget(self.btnPlay)
+        # Timeline
+        self.sldPosition = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.sldPosition.setMinimum(0)
+        self.sldPosition.valueChanged.connect(self.mplPlayer.setPosition)
+        self.mplPlayer.positionChanged.connect(self.sldPosition.setValue)
+        self.sldPosition.setEnabled(False)
+        vbox.addWidget(self.sldPosition)
+
+        self.setLayout(vbox)
+        self.resize(300, 50)
+
+    def openFile(self): # ОТКРЫЕТИЕ ФАЙЛА
+         file = QtWidgets.QFileDialog.getOpenFileUrl(parent = self,
+                                                     caption = "Выберите файл")
+         self.mplPlayer.setMedia(QtMultimedia.QMediaContent(file[0]))
+
+    def initPlayer(self, state): # КОНСТРУКТОР ПЛЕЕРА
+        if state == QtMultimedia.QMediaPlayer.LoadedMedia: # состояние плеера при загрузке аудио
+
+            self.mplPlayer.stop()
+            self.btnPlay.setEnabled(True)
+            self.sldPosition.setEnabled(True)
+            self.sldPosition.setMaximum(self.mplPlayer.duration())
+
+        elif state == QtMultimedia.QMediaPlayer.EndOfMedia: # при конце аудио
+            self.mplPlayer.stop()
+
+        elif state == QtMultimedia.QMediaPlayer.NoMedia or state == QtMultimedia.QMediaPlayer.InvalidMedia:
+            # при отсуствии аудио
+            self.sldPosition.setValue(0)
+            self.sldPosition.setEnabled(False)
+            self.btnPlay.setEnabled(False)
+
+    def setPlayerState(self, state): # ДЕЙСТВИЯ ПРИ НАЖАТИИ PLAY
+        if state == QtMultimedia.QMediaPlayer.PlayingState:
+            # при включенном аудио
+            self.btnPlay.setEnabled(True)
+            self.btnPlay.setText('Pause')
+            self.btnPlay.clicked.connect(self.mplPlayer.pause)
+
+        elif state == QtMultimedia.QMediaPlayer.PausedState:
+            # при выключенном
+            self.btnPlay.setEnabled(True)
+            self.btnPlay.setText('Play')
+            self.btnPlay.clicked.connect(self.mplPlayer.play)
+
+app = QApplication(sys.argv)
+window = MyWindow()
+window.show()
+sys.exit(app.exec_())
