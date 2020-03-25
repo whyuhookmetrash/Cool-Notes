@@ -57,13 +57,56 @@ class Notes(QWidget):
 
         self.notes_count = len(self.notes_dict_list)  # КОЛИЧЕСТВО ЗАМЕТОК
 
+        # Размеры (Пришлось перенести сюда, иначе ничего не работает)
+
+        top = 400
+        left = 400
+        width = 800
+        height = 600
+
+        self.setGeometry(top, left, width, height)
+
+    #--------------------------------------Рисование в окне-----------------------------------------------
+
+        self.image = QImage(self.size(), QImage.Format_RGB32)
+        self.image.fill(Qt.black)
+ 
+        self.drawing = False
+        self.brushSize = 5
+        self.brushColor = Qt.white
+        self.lastPoint = QPoint()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.drawing = True
+            self.lastPoint = event.pos()
+            #print(self.lastPoint)
+ 
+    def mouseMoveEvent(self, event):
+        if(event.buttons() & Qt.LeftButton) & self.drawing:
+            painter = QPainter(self.image)
+            painter.setPen(QPen(self.brushColor, self.brushSize, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.drawLine(self.lastPoint, event.pos())
+            self.lastPoint = event.pos()
+            self.update()
+ 
+    def mouseReleaseEvent(self, event):
+ 
+        if event.button() == Qt.LeftButton:
+            self.drawing = False
+ 
+    def paintEvent(self, event):
+        canvasPainter  = QPainter(self)
+        canvasPainter.drawImage(self.rect(),self.image, self.image.rect() )
+
+    #--------------------------------------------------------------------------------------------------------
+
         self.initUI()
 
     def initUI(self):
 
         # Размеры
         self.setWindowTitle('Note')
-        self.setGeometry(300, 200, 650, 450)
 
         # Нулевой слой
         self.ZLay = QVBoxLayout()
@@ -121,6 +164,67 @@ class Notes(QWidget):
         self.left_menu.addStretch()
         self.frame_menu.setLayout(self.left_menu)
         #self.mainLayout.addWidget(self.frame_menu)
+
+        #----------------------------------Кнопки рисования---------------------------------------------------
+
+        brushSize = QMenu()
+
+        threepxAction = QAction( QIcon("icons/threepx.png"), "3px", self)
+        brushSize.addAction(threepxAction)
+        threepxAction.triggered.connect(self.threePixel)
+ 
+        fivepxAction = QAction(QIcon("icons/fivepx.png"), "5px", self)
+        brushSize.addAction(fivepxAction)
+        fivepxAction.triggered.connect(self.fivePixel)
+ 
+        sevenpxAction = QAction(QIcon("icons/sevenpx.png"),"7px", self)
+        brushSize.addAction(sevenpxAction)
+        sevenpxAction.triggered.connect(self.sevenPixel)
+ 
+        ninepxAction = QAction(QIcon("icons/ninepx.png"), "9px", self)
+        brushSize.addAction(ninepxAction)
+        ninepxAction.triggered.connect(self.ninePixel)
+
+        paintSize = MyPushButton('PaintSize')
+        paintSize.setMenu(brushSize)
+        self.buttonLayout.addWidget(paintSize)
+
+        #---------------------------------------------------------------------------------------------------------
+
+        brushColor = QMenu()
+
+        blackAction = QAction(QIcon("icons/black.png"), "Black", self)
+        blackAction.setShortcut("Ctrl+B")
+        brushColor.addAction(blackAction)
+        blackAction.triggered.connect(self.blackColor)
+ 
+ 
+        whitekAction = QAction(QIcon("icons/white.png"), "White", self)
+        whitekAction.setShortcut("Ctrl+W")
+        brushColor.addAction(whitekAction)
+        whitekAction.triggered.connect(self.whiteColor)
+ 
+ 
+        redAction = QAction(QIcon("icons/red.png"), "Red", self)
+        redAction.setShortcut("Ctrl+R")
+        brushColor.addAction(redAction)
+        redAction.triggered.connect(self.redColor)
+ 
+        greenAction = QAction(QIcon("icons/green.png"), "Green", self)
+        greenAction.setShortcut("Ctrl+G")
+        brushColor.addAction(greenAction)
+        greenAction.triggered.connect(self.greenColor)
+ 
+        yellowAction = QAction(QIcon("icons/yellow.png"), "Yellow", self)
+        yellowAction.setShortcut("Ctrl+Y")
+        brushColor.addAction(yellowAction)
+        yellowAction.triggered.connect(self.yellowColor)
+
+        paintColor = MyPushButton('PaintColor')
+        paintColor.setMenu(brushColor)
+        self.buttonLayout.addWidget(paintColor)
+
+        #---------------------------------------------------------------------------------------------------------
 
         # Словарь для хранения заметок по хэштегам
         self.hash_dict = {}
@@ -189,6 +293,36 @@ class Notes(QWidget):
 
         # Запускаем цикл
         self.cycle_all_notes()
+
+    #---------------------------Функции смены цвета размера кисти------------------------------------------------------
+
+    def blackColor(self):
+        self.brushColor = Qt.black
+ 
+    def whiteColor(self):
+        self.brushColor = Qt.white
+ 
+    def redColor(self):
+        self.brushColor = Qt.red
+ 
+    def greenColor(self):
+        self.brushColor = Qt.green
+ 
+    def yellowColor(self):
+        self.brushColor = Qt.yellow
+
+    def threePixel(self):
+        self.brushSize = 3
+ 
+    def fivePixel(self):
+        self.brushSize = 5
+ 
+    def sevenPixel(self):
+        self.brushSize = 7
+ 
+    def ninePixel(self):
+        self.brushSize = 9
+
 
     #-------------------------Functions for MainNote-------------------------
     def create_main_file(self):  # СОЗДАНИЕ ГЛАВНОЙ ЗАМЕТКИ
@@ -869,4 +1003,5 @@ if __name__ == '__main__':
 
     demo = Notes()
     demo.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec_())    
+
